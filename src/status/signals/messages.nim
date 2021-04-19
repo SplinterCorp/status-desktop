@@ -199,8 +199,7 @@ proc toCommunity*(jsonCommunity: JsonNode): Community =
         id: result.id & chatId,
         name: chat{"name"}.getStr,
         canPost: chat{"canPost"}.getBool,
-        # TODO get this from access
-        chatType: ChatType.Public#chat{"permissions"}{"access"}.getInt,
+        chatType: ChatType.CommunityChat
       ))
 
   if jsonCommunity.hasKey("members") and jsonCommunity["members"].kind != JNull:

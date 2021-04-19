@@ -17,6 +17,9 @@ proc handleChatEvents(self: ChatController) =
   # Display emoji reactions
   self.status.events.on("reactionsLoaded") do(e:Args):
     self.view.reactions.push(ReactionsLoadedArgs(e).reactions)
+  # Display already pinned messages
+  self.status.events.on("pinnedMessagesLoaded") do(e:Args):
+    self.view.pushPinnedMessages(MsgsLoadedArgs(e).messages)
 
   self.status.events.on("contactUpdate") do(e: Args):
     var evArgs = ContactUpdateArgs(e)

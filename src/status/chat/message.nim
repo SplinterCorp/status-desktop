@@ -65,6 +65,7 @@ type Message* = object
   communityId*: string
   audioDurationMs*: int
   hasMention*: bool
+  isPinned*: bool
 
 type Reaction* = object
   id*: string

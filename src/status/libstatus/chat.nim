@@ -379,3 +379,32 @@ proc myPendingRequestsToJoin*(): seq[CommunityMembershipRequest] =
       communityRequests.add(jsonCommunityReqest.toCommunityMembershipRequest())
 
   return communityRequests
+
+proc rpcPinnedChatMessages*(chatId: string, cursorVal: JsonNode, limit: int, success: var bool): string =
+  success = true
+  try:
+    result = callPrivateRPC("chatPinnedMessages".prefix, %* [chatId, cursorVal, limit])
+  except RpcException as e:
+    success = false
+    result = e.msg
+
+proc pinnedMessagesByChatID*(chatId: string, cursor: string): (string, seq[Message]) =
+  var cursorVal: JsonNode
+  
+  if cursor == "":
+    cursorVal = newJNull()
+  else:
+    cursorVal = newJString(cursor)
+
+  var success: bool
+  let callResult = rpcPinnedChatMessages(chatId, cursorVal, 20, success)
+  if success:
+    result = parseChatMessagesResponse(chatId, callResult.parseJson()["result"])
+
+proc setPinMessage*(messageId: string, chatId: string, pinned: bool) =
+  discard callPrivateRPC("sendPinMessage".prefix, %*[{
+    "messageID": messageId,
+    "pinned": pinned,
+    "chat_id": chatId,
+    "localChatID": chatId
+  }])

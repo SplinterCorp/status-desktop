@@ -1,7 +1,7 @@
 import json, json, options, json_serialization, stint, chronicles
 import core, types, utils, strutils, strformat
 import utils
-from status_go import validateMnemonic, startWallet
+from status_go import validateMnemonic#, startWallet
 import ../wallet/account
 import web3/ethtypes
 import ./types
@@ -84,7 +84,8 @@ proc validateMnemonic*(mnemonic: string): string =
   result = $status_go.validateMnemonic(mnemonic)
 
 proc startWallet*(watchNewBlocks: bool) =
-  discard status_go.startWallet(watchNewBlocks) # TODO: true  to watch trx
+  discard
+  # discard status_go.startWallet(watchNewBlocks) # TODO: true  to watch trx
 
 proc hex2Token*(input: string, decimals: int): string =
   var value = fromHex(Stuint[256], input)

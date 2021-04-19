@@ -1,4 +1,4 @@
-import NimQml, Tables, sets, json, sugar
+import NimQml, Tables, sets, json, sugar, chronicles
 import ../../../status/status
 import ../../../status/accounts
 import ../../../status/chat
@@ -37,6 +37,7 @@ type
     CommunityId = UserRole + 27
     HasMention = UserRole + 28
     StickerPackId = UserRole + 29
+    IsPinned = UserRole + 30
 
 QtObject:
   type
@@ -122,6 +123,15 @@ QtObject:
   method rowCount(self: ChatMessageList, index: QModelIndex = nil): int =
     return self.messages.len
 
+  proc countChanged*(self: ChatMessageList) {.signal.}
+
+  proc count*(self: ChatMessageList): int {.slot.}  =
+    self.messages.len
+
+  QtProperty[int] count:
+    read = count
+    notify = countChanged
+
   proc getReactions*(self:ChatMessageList, messageId: string):string =
     if not self.messageReactions.hasKey(messageId): return ""
     result = self.messageReactions[messageId]
@@ -159,6 +169,7 @@ QtObject:
       of ChatMessageRoles.LinkUrls: result = newQVariant(message.linkUrls)
       of ChatMessageRoles.CommunityId: result = newQVariant(message.communityId)
       of ChatMessageRoles.HasMention: result = newQVariant(message.hasMention)
+      of ChatMessageRoles.IsPinned: result = newQVariant(message.isPinned)
       # Pass the command parameters as a JSON string
       of ChatMessageRoles.CommandParameters: result = newQVariant($(%*{
         "id": message.commandParameters.id,
@@ -201,6 +212,7 @@ QtObject:
       ChatMessageRoles.CommunityId.int: "communityId",
       ChatMessageRoles.Alias.int:"alias",
       ChatMessageRoles.HasMention.int:"hasMention",
+      ChatMessageRoles.IsPinned.int:"isPinned",
       ChatMessageRoles.LocalName.int:"localName",
       ChatMessageRoles.StickerPackId.int:"stickerPackId"
     }.toTable
@@ -233,6 +245,7 @@ QtObject:
     self.beginInsertRows(newQModelIndex(), self.messages.len, self.messages.len)
     self.messageIndex[message.id] = self.messages.len
     self.messages.add(message)
+    self.countChanged()
     self.endInsertRows()
 
   proc add*(self: ChatMessageList, messages: seq[Message]) =
@@ -241,7 +254,18 @@ QtObject:
       if self.messageIndex.hasKey(message.id): continue
       self.messageIndex[message.id] = self.messages.len
       self.messages.add(message)
+    self.countChanged()
     self.endInsertRows()
+
+  proc remove*(self: ChatMessageList, messageId: string) =
+    if not self.messageIndex.hasKey(messageId): return
+
+    let index = self.getMessageIndex(messageId)
+    self.beginRemoveRows(newQModelIndex(), index, index)
+    self.messages.delete(index)
+    self.messageIndex.del(messageId)
+    self.countChanged()
+    self.endRemoveRows()
 
   proc getMessageById*(self: ChatMessageList, messageId: string): Message =
     if (not self.messageIndex.hasKey(messageId)): return
@@ -261,6 +285,16 @@ QtObject:
     let topLeft = self.createIndex(msgIdx, 0, nil)
     let bottomRight = self.createIndex(msgIdx, 0, nil)
     self.dataChanged(topLeft, bottomRight, @[ChatMessageRoles.EmojiReactions.int])
+
+  proc changeMessagePinned*(self: ChatMessageList, messageId: string, pinned: bool) =
+    if not self.messageIndex.hasKey(messageId): return
+    let msgIdx = self.messageIndex[messageId]
+    var message = self.messages[msgIdx]
+    message.isPinned = pinned
+    self.messages[msgIdx] = message
+    let topLeft = self.createIndex(msgIdx, 0, nil)
+    let bottomRight = self.createIndex(msgIdx, 0, nil)
+    self.dataChanged(topLeft, bottomRight, @[ChatMessageRoles.IsPinned.int])
 
   proc markMessageAsSent*(self: ChatMessageList, messageId: string)=
     let topLeft = self.createIndex(0, 0, nil)

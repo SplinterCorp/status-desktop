@@ -66,6 +66,9 @@ Rectangle {
         }
     }
 
+    PinnedMessagesPopup {
+        id: pinnedMessagesPopup
+    }
 
     StatusContextMenuButton {
         id: moreActionsBtn
