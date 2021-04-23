@@ -68,7 +68,25 @@ proc fromEvent*(event: JsonNode): Signal =
 
   if event["event"]{"pinMessages"} != nil:
     for jsonPinnedMessage in event["event"]["pinMessages"]:
-      signal.pinnedMessages.add(jsonPinnedMessage.toMessage(pk))
+      var contentType: ContentType
+      try:
+        contentType = ContentType(jsonPinnedMessage{"contentType"}.getInt)
+      except:
+        warn "Unknown content type received", type = jsonPinnedMessage{"contentType"}.getInt
+        contentType = ContentType.Message
+      signal.pinnedMessages.add(Message(
+        # TODO removethe 0x once it's fixed in status-go
+        id: "0x" & jsonPinnedMessage{"id"}.getStr,
+        chatId: jsonPinnedMessage{"chat_id"}.getStr,
+        localChatId: jsonPinnedMessage{"localChatId"}.getStr,
+        fromAuthor: jsonPinnedMessage{"from"}.getStr,
+        identicon: jsonPinnedMessage{"identicon"}.getStr,
+        alias: jsonPinnedMessage{"alias"}.getStr,
+        clock: jsonPinnedMessage{"clock"}.getInt,
+        isPinned: jsonPinnedMessage{"pinned"}.getBool,
+        message_type: jsonPinnedMessage{"message_type"}.getStr,
+        contentType: contentType
+      ))
 
   result = signal
 

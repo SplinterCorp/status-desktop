@@ -242,6 +242,7 @@ QtObject:
   proc add*(self: ChatMessageList, message: Message) =
     if self.messageIndex.hasKey(message.id): return # duplicated msg
 
+    debug "New message", chatId = self.id, id = message.id, text = message.text
     self.beginInsertRows(newQModelIndex(), self.messages.len, self.messages.len)
     self.messageIndex[message.id] = self.messages.len
     self.messages.add(message)
@@ -287,7 +288,9 @@ QtObject:
     self.dataChanged(topLeft, bottomRight, @[ChatMessageRoles.EmojiReactions.int])
 
   proc changeMessagePinned*(self: ChatMessageList, messageId: string, pinned: bool) =
+    debug "Got a message to pin", messageId, pinned
     if not self.messageIndex.hasKey(messageId): return
+    debug "Passed the thing"
     let msgIdx = self.messageIndex[messageId]
     var message = self.messages[msgIdx]
     message.isPinned = pinned

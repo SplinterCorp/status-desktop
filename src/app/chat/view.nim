@@ -937,12 +937,21 @@ QtObject:
     return idx
 
   proc addPinMessage*(self: ChatsView, messageId: string, chatId: string) =
+    self.upsertChannel(chatId)
+    debug "upsert"
     self.messageList[chatId].changeMessagePinned(messageId, true)
+    debug "changeMessagePinned"
     self.pinnedMessagesList[chatId].add(self.messageList[chatId].getMessageById(messageId))
+    debug "add"
 
   proc removePinMessage*(self: ChatsView, messageId: string, chatId: string) =
+    self.upsertChannel(chatId)
     self.messageList[chatId].changeMessagePinned(messageId, false)
-    self.pinnedMessagesList[chatId].remove(messageId)
+    try:
+      self.pinnedMessagesList[chatId].remove(messageId)
+    except Exception as e:
+      error "Error removing ", msg = e.msg
+    
 
   proc pinMessage*(self: ChatsView, messageId: string, chatId: string) {.slot.} =
     self.status.chat.setPinMessage(messageId, chatId, true)
@@ -954,10 +963,12 @@ QtObject:
 
   proc addPinnedMessages*(self: ChatsView, pinnedMessages: seq[Message]) =
     for pinnedMessage in pinnedMessages:
+      debug "NEW PINNED MESAGE", id = pinnedMessage.id, chatId = pinnedMessage.localChatId, isPinned = pinnedMessage.isPinned
       if (pinnedMessage.isPinned):
-        self.addPinMessage(pinnedMessage.id, pinnedMessage.chat_id)
+        # TODO check if this works for group chats as well
+        self.addPinMessage(pinnedMessage.id, pinnedMessage.localChatId)
       else:
-        self.removePinMessage(pinnedMessage.id, pinnedMessage.chat_id)
+        self.removePinMessage(pinnedMessage.id, pinnedMessage.localChatId)
 
   proc isActiveMailserverResult(self: ChatsView, resultEncoded: string) {.slot.} =
     let arg = decode[tuple[isActiveMailserverAvailable: bool, topics: seq[MailserverTopic]]](resultEncoded)
