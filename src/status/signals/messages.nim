@@ -63,9 +63,12 @@ proc fromEvent*(event: JsonNode): Signal =
       signal.communities.add(jsonCommunity.toCommunity)
 
   if event["event"]{"requestsToJoinCommunity"} != nil:
-    debug "requests", event = event["event"]["requestsToJoinCommunity"]
     for jsonCommunity in event["event"]["requestsToJoinCommunity"]:
       signal.membershipRequests.add(jsonCommunity.toCommunityMembershipRequest)
+
+  if event["event"]{"pinMessages"} != nil:
+    for jsonPinnedMessage in event["event"]["pinMessages"]:
+      signal.pinnedMessages.add(jsonPinnedMessage.toMessage(pk))
 
   result = signal
 

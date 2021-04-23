@@ -42,6 +42,8 @@ proc handleChatEvents(self: ChatController) =
         self.view.communities.addCommunityToList(community)
     if (evArgs.communityMembershipRequests.len > 0):
       self.view.communities.addMembershipRequests(evArgs.communityMembershipRequests)
+    if (evArgs.pinnedMessages.len > 0):
+      self.view.addPinnedMessages(evArgs.pinnedMessages)
 
   self.status.events.on("channelUpdate") do(e: Args):
     var evArgs = ChatUpdateArgs(e)

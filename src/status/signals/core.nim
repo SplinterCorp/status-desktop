@@ -26,6 +26,7 @@ QtObject:
     self.QObject.delete
 
   proc processSignal(self: SignalsController, statusSignal: string) =
+    echo statusSignal
     var jsonSignal: JsonNode
     try: 
       jsonSignal = statusSignal.parseJson

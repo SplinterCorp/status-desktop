@@ -936,15 +936,28 @@ QtObject:
       if(id == msg.id): return idx
     return idx
 
-  proc pinMessage*(self: ChatsView, messageId: string, chatId: string) {.slot.} =
-    self.status.chat.setPinMessage(messageId, chatId, true)
+  proc addPinMessage*(self: ChatsView, messageId: string, chatId: string) =
     self.messageList[chatId].changeMessagePinned(messageId, true)
     self.pinnedMessagesList[chatId].add(self.messageList[chatId].getMessageById(messageId))
 
-  proc unPinMessage*(self: ChatsView, messageId: string, chatId: string) {.slot.} =
-    self.status.chat.setPinMessage(messageId, chatId, false)
+  proc removePinMessage*(self: ChatsView, messageId: string, chatId: string) =
     self.messageList[chatId].changeMessagePinned(messageId, false)
     self.pinnedMessagesList[chatId].remove(messageId)
+
+  proc pinMessage*(self: ChatsView, messageId: string, chatId: string) {.slot.} =
+    self.status.chat.setPinMessage(messageId, chatId, true)
+    self.addPinMessage(messageId, chatId)
+
+  proc unPinMessage*(self: ChatsView, messageId: string, chatId: string) {.slot.} =
+    self.status.chat.setPinMessage(messageId, chatId, false)
+    self.removePinMessage(messageId, chatId)
+
+  proc addPinnedMessages*(self: ChatsView, pinnedMessages: seq[Message]) =
+    for pinnedMessage in pinnedMessages:
+      if (pinnedMessage.isPinned):
+        self.addPinMessage(pinnedMessage.id, pinnedMessage.chat_id)
+      else:
+        self.removePinMessage(pinnedMessage.id, pinnedMessage.chat_id)
 
   proc isActiveMailserverResult(self: ChatsView, resultEncoded: string) {.slot.} =
     let arg = decode[tuple[isActiveMailserverAvailable: bool, topics: seq[MailserverTopic]]](resultEncoded)
