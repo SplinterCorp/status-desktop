@@ -5,7 +5,7 @@
   "description": "These scripts are used to translate the app automatically by reusing the existing translation found in the Status-React repo: https://github.com/status-im/status-react/tree/develop/translations",
   "main": "qstrConverter.js",
   "dependencies": {
-    "fs-extra": "^9.0.1",
+    "fs-extra": "^9.1.0",
     "xml-js": "^1.6.11"
   },
   "devDependencies": {},
